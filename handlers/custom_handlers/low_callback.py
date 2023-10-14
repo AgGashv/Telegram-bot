@@ -10,6 +10,6 @@ def low_callback(call):
         low(call.message)
     elif call.data == 'no':
         bot.set_state(call.message.from_user.id, StateMemoryStorage(), call.message.chat.id)
-        bot.send_message(call.message.chat.id, set_bot_commands.text)
+        bot.send_message(call.message.chat.id, f'Выберите команду:\n{set_bot_commands.text}')
 
 
