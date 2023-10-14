@@ -9,8 +9,19 @@ else:
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_KEY = os.getenv("API_KEY")
 
+
+headers = {'x-access-token': API_KEY}
+
+prices_url = "https://api.travelpayouts.com/v1/prices/calendar"
+# cities_url = "https://api.travelpayouts.com/data/ru/cities.json"
+direct_url = "https://api.travelpayouts.com/v2/prices/latest"
+
+querystring = {"one_way": True, "period_type": "year", "sorting": "price",
+               "show_to_affiliates": False}
+
 DEFAULT_COMMANDS = (
     ("start", "Запустить бота"),
     ("help", "Вывести справку"),
-    ("hello_world", "Приветствие")
+    ("hello_world", "Приветствие"),
+    ("low", "Найти самый дешёвый билет")
 )
