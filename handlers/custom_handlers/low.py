@@ -49,38 +49,38 @@ def get_destination_city(message):
 
         if response.status_code == requests.codes.ok:
             direct_data = json.loads(response.text)
-
             try:
-
                 direct_data_value = direct_data['data'][0].get('value')
                 direct_data_date = direct_data['data'][0].get('depart_date')
-
+            except IndexError:
+                bot.send_message(message.from_user.id, "Билеты не найдены. Попробуйте другие города.")
+            else:
                 response1 = requests.request("GET", prices_url, headers=headers,
                                              params={"origin": Cities[id_origin].code,
                                                      "destination": Cities[id_destination].code,
                                                      "departure_date": direct_data_date,
                                                      "calendar_type": "departure_date"})
 
-                price_data = json.loads(response1.text)
-
-            except IndexError:
-                bot.send_message(message.from_user.id, "Билеты не найдены. Попробуйте другие города.")
-            else:
-                ticket_info = '{}{} <b>→</b> {}{}\n\n' \
-                              'Цена: {:,} руб.\n' \
-                              'Дата: {}\n' \
-                              'Авиакомпания: {}\n' \
-                              'Номер рейса: {}'.format(
-                                Cities[id_origin].flag,
-                                Cities[id_origin].name,
-                                Cities[id_destination].name,
-                                Cities[id_destination].flag,
-                                direct_data_value,
-                                direct_data_date[-2:] + direct_data_date[4:8] + direct_data_date[:4],
-                                price_data['data'].get(direct_data_date).get('airline'),
-                                price_data['data'].get(direct_data_date).get('flight_number')
-                                ).replace(',', ' ')
-                bot.send_message(message.chat.id, ticket_info, parse_mode="html")
+                if response1.status_code == requests.codes.ok:
+                    price_data = json.loads(response1.text)
+                    ticket_info = '{}{} <b>→</b> {}{}\n\n' \
+                                  'Цена: {:,} руб.\n' \
+                                  'Дата: {}\n' \
+                                  'Авиакомпания: {}\n' \
+                                  'Номер рейса: {}'.format(
+                                    Cities[id_origin].flag,
+                                    Cities[id_origin].name,
+                                    Cities[id_destination].name,
+                                    Cities[id_destination].flag,
+                                    direct_data_value,
+                                    direct_data_date[-2:] + direct_data_date[4:8] + direct_data_date[:4],
+                                    price_data['data'].get(direct_data_date).get('airline'),
+                                    price_data['data'].get(direct_data_date).get('flight_number')
+                                    ).replace(',', ' ')
+                    bot.send_message(message.chat.id, ticket_info, parse_mode="html")
+                else:
+                    bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
+                                                           "Извините за доставленные неудобства.")
         else:
             bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                    "Извините за доставленные неудобства.")
