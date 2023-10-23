@@ -59,7 +59,8 @@ def get_destination_city(message):
                                              params={"origin": Cities[id_origin].code,
                                                      "destination": Cities[id_destination].code,
                                                      "departure_date": direct_data_date,
-                                                     "calendar_type": "departure_date"})
+                                                     "calendar_type": "departure_date"},
+                                             timeout=10)
 
                 if response1.status_code == requests.codes.ok:
                     price_data = json.loads(response1.text)
