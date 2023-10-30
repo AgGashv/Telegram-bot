@@ -1,4 +1,3 @@
-from telebot import StateMemoryStorage
 from keyboards.inline.high_continue_ask import ask_to_continue_high
 from loader import bot
 from states.flight_info import FlightInfoStateHigh
@@ -101,5 +100,3 @@ def get_destination_city(message):
                                                    "Извините за доставленные неудобства.")
 
         bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_high())
-
-        bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)

@@ -1,4 +1,3 @@
-from telebot import StateMemoryStorage
 from keyboards.inline.low_continue_ask import ask_to_continue_low
 from loader import bot
 from states.flight_info import FlightInfoStateLow
@@ -88,4 +87,3 @@ def get_destination_city(message):
 
         bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_low())
 
-        bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
