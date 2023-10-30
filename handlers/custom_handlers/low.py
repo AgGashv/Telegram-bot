@@ -1,4 +1,5 @@
 from keyboards.inline.low_continue_ask import ask_to_continue_low
+from keyboards.inline.aviasales_site import site_button
 from loader import bot
 from states.flight_info import FlightInfoStateLow
 from config_data.config import querystring1, direct_url, headers, prices_url
@@ -77,7 +78,11 @@ def get_destination_city(message):
                                     price_data['data'].get(direct_data_date).get('airline'),
                                     price_data['data'].get(direct_data_date).get('flight_number')
                                     ).replace(',', ' ')
-                    bot.send_message(message.chat.id, ticket_info, parse_mode="html")
+                    bot.send_message(message.chat.id, ticket_info, parse_mode="html", reply_markup=site_button(
+                        Cities[id_origin].code,
+                        direct_data_date[-2:] + direct_data_date[5:7],
+                        Cities[id_destination].code
+                    ))
                 else:
                     bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                            "Извините за доставленные неудобства.")
