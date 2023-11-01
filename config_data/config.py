@@ -9,7 +9,6 @@ else:
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_KEY = os.getenv("API_KEY")
 
-
 headers = {'x-access-token': API_KEY}
 
 prices_url = "https://api.travelpayouts.com/v1/prices/calendar"
@@ -25,5 +24,6 @@ DEFAULT_COMMANDS = (
     ("hello_world", "Приветствие"),
     ("low", "Найти самый дешёвый билет"),
     ("high", "Найти самый дорогой билет среди дешёвых"),
-    ("custom", "Найти дешёвый билет по вашим критериям")
+    ("custom", "Найти дешёвый билет по вашим критериям"),
+    ("history", "История запросов (последние десять)")
 )
