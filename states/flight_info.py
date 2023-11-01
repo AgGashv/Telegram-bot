@@ -45,7 +45,7 @@ class FlightInfoStateHigh(FlightInfoStateLow):
 
 
 class FlightInfoStateCustom(FlightInfoStateLow):
-    def __init__(self, origin_city, destination_city, departure_date, return_date, cost, one_way=True):
+    def __init__(self, origin_city, destination_city, departure_date, return_date, one_way=True):
         super().__init__(origin_city, destination_city)
         self.__one_way = one_way
         self.__departure_date = departure_date
