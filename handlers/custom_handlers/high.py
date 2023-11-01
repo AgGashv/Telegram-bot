@@ -1,4 +1,6 @@
+from telebot import StateMemoryStorage
 from keyboards.inline.high_continue_ask import ask_to_continue_high
+from database.database import Users
 from keyboards.inline.aviasales_site import site_button
 from loader import bot
 from states.flight_info import FlightInfoStateHigh
@@ -68,8 +70,7 @@ def get_destination_city(message):
                         ticket_info = '{}{} <b>→</b> {}{}\n\n' \
                                       'Цена: {:,} руб.\n' \
                                       'Дата: {}\n' \
-                                      'Информация об авиакомпании и номере рейса отсутствуют. ' \
-                                      'Возможно дата вылета ещё совсем далеко.'.format(
+                                      'Информация об авиакомпании и номере рейса отсутствуют.'.format(
                                         Cities[id_origin].flag,
                                         Cities[id_origin].name,
                                         Cities[id_destination].name,
@@ -98,11 +99,36 @@ def get_destination_city(message):
                         direct_data_date[-2:] + direct_data_date[5:7],
                         Cities[id_destination].code
                     ))
+
+                    first_instance = 0
+                    rows_count = 0
+
+                    for i in Users.select().where(Users.id == message.from_user.id):
+                        rows_count += 1
+                        if rows_count == 1:
+                            first_instance = i
+
+                    if rows_count == 10:
+                        first = Users.delete().where(Users.history_date == first_instance.history_date)
+                        first.execute()
+
+                    user = Users.create(id=message.from_user.id, history_command='/high',
+                                        history_info='{}{} <b>→</b> {}{} Цена: {} руб.\n'.format(
+                                            Cities[id_origin].flag,
+                                            Cities[id_origin].name,
+                                            Cities[id_destination].name,
+                                            Cities[id_destination].flag,
+                                            direct_data_value
+                                        ))
+                    user.save()
+                    bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
                 else:
                     bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                            "Извините за доставленные неудобства.")
         else:
             bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                    "Извините за доставленные неудобства.")
+
+        bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
 
         bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_high())

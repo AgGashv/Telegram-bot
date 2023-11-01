@@ -1,4 +1,6 @@
+from telebot import StateMemoryStorage
 from telebot.types import ReplyKeyboardRemove
+from database.database import Users
 from keyboards.inline.custom_continue_ask import ask_to_continue_custom
 from keyboards.inline.aviasales_site import site_button
 from keyboards.reply.one_way import ask_to_one_way_attribute
@@ -15,7 +17,7 @@ import datetime
 @bot.message_handler(commands=['custom'])
 def custom(message):
     bot.set_state(message.chat.id, FlightInfoStateCustom.origin_city, message.chat.id)
-    bot.send_message(message.chat.id, "Введите город отправления.")
+    bot.send_message(message.chat.id, "Введите город отправления.", )
 
 
 @bot.message_handler(state=FlightInfoStateCustom.origin_city)
@@ -61,8 +63,8 @@ def get_one_way_attribute(message):
         bot.send_message(message.from_user.id, "Введите дату отправления в формате: дд-мм-гг. Пример: 01-01-2023",
                          reply_markup=ReplyKeyboardRemove())
     else:
-        bot.send_message(message.from_user.id, 'Неправильный ввод. Выберите один из представленных'
-                                               'вариантов.')
+        bot.send_message(message.from_user.id, 'Неправильный ввод. Выберите один из представленных '
+                                               'вариантов.', reply_markup=ask_to_one_way_attribute())
 
 
 @bot.message_handler(state=FlightInfoStateCustom.departure_date)
@@ -133,9 +135,34 @@ def get_departure_date(message):
                                 direct_data_date[-2:] + direct_data_date[5:7],
                                 Cities[id_destination].code
                             ))
+
+                            first_instance = 0
+                            rows_count = 0
+
+                            for i in Users.select().where(Users.id == message.from_user.id):
+                                rows_count += 1
+                                if rows_count == 1:
+                                    first_instance = i
+
+                            if rows_count == 10:
+                                first = Users.delete().where(Users.history_date == first_instance.history_date)
+                                first.execute()
+
+                            user = Users.create(id=message.from_user.id, history_command='/custom',
+                                                history_info='{}{} <b>→</b> {}{} Цена: {} руб.\n'.format(
+                                                    Cities[id_origin].flag,
+                                                    Cities[id_origin].name,
+                                                    Cities[id_destination].name,
+                                                    Cities[id_destination].flag,
+                                                    direct_data_value
+                                                ))
+                            user.save()
+                            bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
                     else:
                         bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                                "Извините за доставленные неудобства.")
+
+                bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
 
                 bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_custom())
 
@@ -149,8 +176,6 @@ def get_departure_date(message):
         bot.send_message(message.from_user.id, 'Неправильный ввод. Введите дату отправления в формате: дд-мм-гг')
 
 
-
-
 @bot.message_handler(state=FlightInfoStateCustom.return_date)
 def get_return_date(message):
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -160,10 +185,16 @@ def get_return_date(message):
     if re.search(r'\b\d{2}-\d{2}-\d{4}\b', message.text):
         try:
             date = datetime.date(int(message.text[6:]), int(message.text[3:5]), int(message.text[0:2]))
+            date_difference = date - data['departure_date']
 
             if date < data['departure_date']:
                 raise IndexError
 
+            if date_difference.days > 30:
+                raise ValueError
+
+        except ValueError:
+            bot.send_message(message.from_user.id, "Разница в датах не должна превышать 30 дней.")
         except IndexError:
             bot.send_message(message.from_user.id, 'Неправильный ввод. Дата возвращения раньше даты отправления.')
         except Exception:
@@ -172,26 +203,27 @@ def get_return_date(message):
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['return_date'] = date
 
-            querystring = {"origin": Cities[id_origin].code,
-                           "destination": Cities[id_destination].code,
-                           "depart_date": data['departure_date'].isoformat(),
-                           "return_date": data['return_date'].isoformat()
-                           }
-            response = requests.request("GET", custom_url, headers=headers,
-                                        params=querystring, timeout=20)
+            query = {"origin": Cities[id_origin].code,
+                     "destination": Cities[id_destination].code,
+                     "depart_date": data['departure_date'].isoformat(),
+                     "return_date": data['return_date'].isoformat()
+                     }
+            resp = requests.request("GET", custom_url, headers=headers,
+                                    params=query, timeout=20)
 
-            if response.status_code == requests.codes.ok:
-                direct_data = json.loads(response.text)
+            if resp.status_code == requests.codes.ok:
+                direct_data = json.loads(resp.text)
                 try:
                     direct_data_price = direct_data['data'].get(Cities[id_destination].code).get('0').get('price')
                     direct_data_airline = direct_data['data'].get(Cities[id_destination].code).get('0').get('airline')
-                    direct_data_flight_number = direct_data['data'].get(Cities[id_destination].code).get('0').get('flight_number')
+                    direct_data_flight_number = direct_data['data'].get(Cities[id_destination].code).get('0').get(
+                        'flight_number')
                 except Exception:
                     bot.send_message(message.from_user.id, "Билеты не найдены. Попробуйте другие города.")
                 else:
                     direct_data_depart_date = data['departure_date'].isoformat()
                     direct_data_return_date = data['return_date'].isoformat()
-                    ticket_info = '{}{} <b>→</b> {}{}\n\n' \
+                    ticket_info = '{}{} <b>⟷</b> {}{}\n\n' \
                                   'Цена: {:,} руб.\n' \
                                   'Дата отправления: {}\n' \
                                   'Дата возвращения: {}\n' \
@@ -216,8 +248,33 @@ def get_return_date(message):
                         Cities[id_destination].code,
                         direct_data_return_date[-2:] + direct_data_return_date[5:7]
                     ))
+
+                    first_instance = 0
+                    rows_count = 0
+
+                    for i in Users.select().where(Users.id == message.from_user.id):
+                        rows_count += 1
+                        if rows_count == 1:
+                            first_instance = i
+
+                    if rows_count == 10:
+                        first = Users.delete().where(Users.history_date == first_instance.history_date)
+                        first.execute()
+
+                    user = Users.create(id=message.from_user.id, history_command='/custom',
+                                        history_info='{}{} <b>⟷</b> {}{} Цена: {} руб.\n'.format(
+                                            Cities[id_origin].flag,
+                                            Cities[id_origin].name,
+                                            Cities[id_destination].name,
+                                            Cities[id_destination].flag,
+                                            direct_data_price
+                                        ))
+                    user.save()
+                    bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
             else:
                 bot.send_message(message.from_user.id, "Что-то пошло не по плану. Повторите попытку позже. "
                                                        "Извините за доставленные неудобства.")
+
+            bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
 
             bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_custom())
