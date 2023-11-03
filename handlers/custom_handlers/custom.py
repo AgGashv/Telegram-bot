@@ -278,3 +278,7 @@ def get_return_date(message):
             bot.set_state(message.from_user.id, StateMemoryStorage(), message.chat.id)
 
             bot.send_message(message.from_user.id, "Хотите продолжить?", reply_markup=ask_to_continue_custom())
+    else:
+        bot.send_message(message.from_user.id, 'Неправильный ввод. Введите дату отправления в формате: дд-мм-гг')
+
+
