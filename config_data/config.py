@@ -14,6 +14,7 @@ headers = {'x-access-token': API_KEY}
 prices_url = "https://api.travelpayouts.com/v1/prices/calendar"
 direct_url = "https://api.travelpayouts.com/v2/prices/latest"
 custom_url = "https://api.travelpayouts.com/v1/prices/direct"
+cities_url = 'https://api.travelpayouts.com/data/ru/cities.json'
 
 querystring1 = {"one_way": True, "period_type": "year", "sorting": "price",
                 "show_to_affiliates": True, 'limit': 1000}
