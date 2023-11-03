@@ -1,9 +1,10 @@
 from loader import bot
 from utils import set_bot_commands
+from telebot.types import Message
 
 
 @bot.message_handler(content_types=['text'])
-def text(message):
+def text(message: Message) -> None:
     if message.text == 'Привет':
         bot.reply_to(message, f"Привет, {message.from_user.full_name}! Я бот для поиска подходящих билетов. "
                               f"Выберите команду, чтобы продолжить.")

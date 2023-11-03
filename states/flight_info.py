@@ -2,7 +2,7 @@ from telebot.handler_backends import State, StatesGroup
 
 
 class FlightInfoStateLow(StatesGroup):
-    def __init__(self, origin_city=State(), destination_city=State()):
+    def __init__(self, origin_city: State = State(), destination_city: State = State()):
         self.__origin_city = origin_city
         self.__destination_city = destination_city
 
@@ -24,7 +24,7 @@ class FlightInfoStateLow(StatesGroup):
 
 
 class FlightInfoStateHigh(FlightInfoStateLow):
-    def __init__(self, origin_city=State(), destination_city=State()):
+    def __init__(self, origin_city: State = State(), destination_city: State = State()):
         super().__init__(origin_city, destination_city)
 
     @property
@@ -45,7 +45,8 @@ class FlightInfoStateHigh(FlightInfoStateLow):
 
 
 class FlightInfoStateCustom(FlightInfoStateLow):
-    def __init__(self, origin_city, destination_city, departure_date, return_date, one_way=True):
+    def __init__(self, origin_city: State, destination_city: State, departure_date: State, return_date: State,
+                 one_way: bool = True):
         super().__init__(origin_city, destination_city)
         self.__one_way = one_way
         self.__departure_date = departure_date

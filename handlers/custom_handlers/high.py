@@ -6,18 +6,19 @@ from loader import bot
 from states.flight_info import FlightInfoStateHigh
 from config_data.config import querystring1, direct_url, headers, prices_url
 from database.database import Cities
+from telebot.types import Message
 import requests
 import json
 
 
 @bot.message_handler(commands=['high'])
-def high(message):
+def high(message: Message) -> None:
     bot.set_state(message.chat.id, FlightInfoStateHigh.origin_city, message.chat.id)
     bot.send_message(message.chat.id, "Введите город отправления.")
 
 
 @bot.message_handler(state=FlightInfoStateHigh.origin_city)
-def get_origin_city(message):
+def get_origin_city(message: Message) -> None:
     try:
         Cities.get(Cities.name == message.text.title())
     except Exception:
@@ -31,7 +32,7 @@ def get_origin_city(message):
 
 
 @bot.message_handler(state=FlightInfoStateHigh.destination_city)
-def get_destination_city(message):
+def get_destination_city(message: Message) -> None:
     try:
         Cities.get(Cities.name == message.text.title())
     except Exception:

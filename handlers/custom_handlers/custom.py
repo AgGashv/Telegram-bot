@@ -8,6 +8,7 @@ from loader import bot
 from states.flight_info import FlightInfoStateCustom
 from config_data.config import querystring1, direct_url, headers, prices_url, custom_url
 from database.database import Cities
+from telebot.types import Message
 import requests
 import json
 import re
@@ -15,13 +16,13 @@ import datetime
 
 
 @bot.message_handler(commands=['custom'])
-def custom(message):
+def custom(message: Message) -> None:
     bot.set_state(message.chat.id, FlightInfoStateCustom.origin_city, message.chat.id)
     bot.send_message(message.chat.id, "Введите город отправления.", )
 
 
 @bot.message_handler(state=FlightInfoStateCustom.origin_city)
-def get_origin_city(message):
+def get_origin_city(message: Message) -> None:
     try:
         Cities.get(Cities.name == message.text.title())
     except Exception:
@@ -35,7 +36,7 @@ def get_origin_city(message):
 
 
 @bot.message_handler(state=FlightInfoStateCustom.destination_city)
-def get_destination_city(message):
+def get_destination_city(message: Message) -> None:
     try:
         Cities.get(Cities.name == message.text.title())
     except Exception:
@@ -50,7 +51,7 @@ def get_destination_city(message):
 
 
 @bot.message_handler(state=FlightInfoStateCustom.one_way)
-def get_one_way_attribute(message):
+def get_one_way_attribute(message: Message) -> None:
     if message.text == 'Туда-обратно' or message.text == 'В одну сторону':
         if message.text == 'Туда-обратно':
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -68,7 +69,7 @@ def get_one_way_attribute(message):
 
 
 @bot.message_handler(state=FlightInfoStateCustom.departure_date)
-def get_departure_date(message):
+def get_departure_date(message: Message) -> None:
     if re.search(r'\b\d{2}-\d{2}-\d{4}\b', message.text):
         try:
             date = datetime.date(int(message.text[6:]), int(message.text[3:5]), int(message.text[0:2]))
@@ -177,7 +178,7 @@ def get_departure_date(message):
 
 
 @bot.message_handler(state=FlightInfoStateCustom.return_date)
-def get_return_date(message):
+def get_return_date(message: Message) -> None:
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
         id_origin = Cities.get(Cities.name == data['origin_city'])
         id_destination = Cities.get(Cities.name == data['destination_city'])

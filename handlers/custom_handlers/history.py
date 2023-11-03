@@ -1,9 +1,10 @@
 from database.database import Users
 from loader import bot
+from telebot.types import Message
 
 
 @bot.message_handler(commands=['history'])
-def get_history(message):
+def get_history(message: Message) -> None:
     text = ''
     for i, user in enumerate(Users.select().where(Users.id == message.from_user.id)):
         text += '{}. Команда: {}\nЧто искали: {}Дата и время: {}\n\n'.format(
